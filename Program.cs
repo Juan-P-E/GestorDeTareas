@@ -1,13 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;         // Para leer y escribir archivos
+using System.Text.Json;  // Para convertir objetos a JSON y viceversa
 
 class Program
 {
     // Lista para almacenar las tareas
-    static List<string> tareas = new();
+    static List<Tarea> tareas = new();
+
+    class Tarea
+    {
+        public string Texto { get; set; } = "";
+    }
+
 
     static void Main()
     {
+        CargarTareas();
+
         while (true)
         {
             Console.Clear();
@@ -47,7 +57,9 @@ class Program
         string? tarea = Console.ReadLine();
         if (!string.IsNullOrWhiteSpace(tarea))
         {
-            tareas.Add(tarea);
+            tareas.Add(new Tarea { Texto = tarea });
+            GuardarTareas();
+
             Console.WriteLine("Tarea agregada!");
         }
         else
@@ -68,10 +80,26 @@ class Program
         {
             for (int i = 0; i < tareas.Count; i++)
             {
-                Console.WriteLine($"{i + 1}. {tareas[i]}");
+                Console.WriteLine($"{i + 1}. {tareas[i].Texto}");
+
             }
         }
         Console.ReadKey();
+    }
+
+    static void GuardarTareas()
+    {
+        string json = JsonSerializer.Serialize(tareas, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText("tareas.json", json);
+    }
+
+    static void CargarTareas()
+    {
+        if (File.Exists("tareas.json"))
+        {
+            string json = File.ReadAllText("tareas.json");
+            tareas = JsonSerializer.Deserialize<List<Tarea>>(json) ?? new List<Tarea>();
+        }
     }
 
     static void EliminarTarea()
@@ -80,7 +108,8 @@ class Program
         Console.Write("Número de tarea a eliminar: ");
         if (int.TryParse(Console.ReadLine(), out int num) && num >= 1 && num <= tareas.Count)
         {
-            tareas.RemoveAt(num - 1);
+            tareas.RemoveAt(num - 1); GuardarTareas();
+
             Console.WriteLine("Tarea eliminada!");
         }
         else
